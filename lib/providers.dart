@@ -27,13 +27,13 @@ final optionsProvider = StateNotifierProvider.autoDispose<
   return PullRequestOptionsNotifier(PullRequestOptions(
       state: PullRequestState.closed,
       sort: PullRequestSort.updated,
-      direction: PullRequestSortDirection.desc));
+      direction: PullRequestSortDirection.desc,
+      page: 1));
 });
 
 @riverpod
-Future<List<PullRequest>> closedPullRequests(ClosedPullRequestsRef ref) async {
+Future<bool> checkRepo(CheckRepoRef ref) async {
   final gitHubService = ref.watch(githubRepositoryProvider);
   final repo = ref.watch(repoProvider);
-  final options = ref.watch(optionsProvider);
-  return gitHubService.getClosedPullRequests(repo, options);
+  return gitHubService.checkRepoExists(repo: repo);
 }

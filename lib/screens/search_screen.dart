@@ -44,7 +44,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
 
   @override
   Widget build(BuildContext context) {
-    final closedPullRequests = ref.watch(closedPullRequestsProvider);
+    final checkRepo = ref.watch(checkRepoProvider);
     return Scaffold(
       appBar: AppBar(
         title: Center(
@@ -53,10 +53,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
             textInputAction: TextInputAction.search,
             onSubmitted: (value) {
               final repo = value.split("/");
-              ref
-                  .read(repoProvider.notifier)
-                  .updateRepo(owner: repo[0], name: repo[1]);
-              setState(() => completedSearching = true);
+              if (repo.length != 2) {
+              } else {
+                ref
+                    .read(repoProvider.notifier)
+                    .updateRepo(owner: repo[0], name: repo[1]);
+                setState(() => completedSearching = true);
+              }
+              
             },
             onChanged: (value) {
               if (value.isNotEmpty) {
@@ -66,6 +70,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
                 }
               } else {
                 _searchController.reverse();
+                setState(() => completedSearching = false);
               }
             },
             decoration: InputDecoration(
@@ -76,10 +81,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
           ),
         ),
       ),
-      body: closedPullRequests.when(
+      body: checkRepo.when(
         data: (data) {
-          if (completedSearching) {
+          if (completedSearching && data) {
             Navigator.of(context).maybePop();
+          } else if (completedSearching && !data) {
+            return Center(
+              child: SizedBox(
+                width: 200,
+                child: Lottie.asset('assets/404.json',
+                    controller: _notFoundController, fit: BoxFit.contain),
+              ),
+            );
           }
           return null;
         },

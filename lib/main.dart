@@ -56,7 +56,7 @@ class MyApp extends StatelessWidget {
                 configuration: const RouteInformation(
                   location: '/?tab=pr',
                 ),
-                rebuild: false,
+                rebuild: true,
               );
               return true;
             },

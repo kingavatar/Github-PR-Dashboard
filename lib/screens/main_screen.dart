@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:github_pr_dashboard/models.dart';
 import 'package:github_pr_dashboard/providers.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:lottie/lottie.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -19,6 +20,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
     with TickerProviderStateMixin {
   late AnimationController _loadingController;
   late AnimationController _notFoundController;
+
+  static const _pageSize = 30;
+
+  final _pagingController = PagingController<int, PullRequest>(firstPageKey: 1);
 
   final openPullRequestIcon = SvgPicture.asset(
     "assets/git-pull-request.svg",
@@ -54,30 +59,50 @@ class _MainScreenState extends ConsumerState<MainScreen>
     _loadingController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 500))
       ..repeat();
+    _pagingController.addPageRequestListener((pageKey) {
+      _fetchPage(pageKey);
+    });
+  }
+
+  Future<void> _fetchPage(int pageKey) async {
+    try {
+      final gitHubService = ref.read(githubRepositoryProvider);
+      final repo = ref.read(repoProvider);
+      final options = ref.read(optionsProvider).copyWith(page: pageKey);
+      // final newItems = ref.read(closedPullRequestsProvider);
+      final newItems = await gitHubService.getClosedPullRequests(
+          repo: repo, options: options);
+      final isLastPage = newItems.length < _pageSize;
+      if (isLastPage) {
+        _pagingController.appendLastPage(newItems);
+      } else {
+        final nextPageKey = pageKey + newItems.length;
+        _pagingController.appendPage(newItems, nextPageKey);
+      }
+    } catch (error) {
+      _pagingController.error = error;
+    }
   }
 
   @override
   void dispose() {
     _notFoundController.dispose();
     _loadingController.dispose();
+    _pagingController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final closedPullRequests = ref.watch(closedPullRequestsProvider);
     return RefreshIndicator(
-      onRefresh: () async {
-        final repo = ref.read(repoProvider);
-        ref
-            .read(repoProvider.notifier)
-            .updateRepo(name: repo.name, owner: repo.owner);
-      },
-      child: closedPullRequests.when(
-        data: (data) => ListView.separated(
-          itemCount: data.length,
-          itemBuilder: (context, index) {
-            final PullRequest pullRequest = data[index];
+      onRefresh: () => Future.sync(
+        () => _pagingController.refresh(),
+      ),
+      child: PagedListView<int, PullRequest>.separated(
+        pagingController: _pagingController,
+        builderDelegate: PagedChildBuilderDelegate<PullRequest>(
+          itemBuilder: (context, item, index) {
+            final PullRequest pullRequest = item;
             final leadingIcon = pullRequest.draft
                 ? draftPullRequestIcon
                 : pullRequest.mergedAt != null
@@ -94,18 +119,29 @@ class _MainScreenState extends ConsumerState<MainScreen>
                   data: pullRequest),
             );
           },
-          separatorBuilder: (context, index) {
-            return const Divider();
-          },
-        ),
-        loading: () => Center(
+          // firstPageErrorIndicatorBuilder: (_) => FirstPageErrorIndicator(
+          //   error: _pagingController.error,
+          //   onTryAgain: () => _pagingController.refresh(),
+          // ),
+          // newPageErrorIndicatorBuilder: (_) => NewPageErrorIndicator(
+          //   error: _pagingController.error,
+          //   onTryAgain: () => _pagingController.retryLastFailedRequest(),
+          // ),
+          firstPageProgressIndicatorBuilder: (_) => Center(
             child: Lottie.asset('assets/loadingV2.json',
-                controller: _loadingController, fit: BoxFit.scaleDown)),
-        error: (error, stackTrace) => Center(
-            child: DioErrorWidget(
-          error: stackTrace,
-          notFoundController: _notFoundController,
-        )),
+                controller: _loadingController, fit: BoxFit.scaleDown),
+          ),
+          // newPageProgressIndicatorBuilder: (_) => NewPageProgressIndicator(),
+          noItemsFoundIndicatorBuilder: (_) => Center(
+            child: SizedBox(
+              width: 200,
+              child: Lottie.asset('assets/404.json',
+                  controller: _notFoundController, fit: BoxFit.contain),
+            ),
+          ),
+          // noMoreItemsIndicatorBuilder: (_) => NoMoreItemsIndicator(),
+        ),
+        separatorBuilder: (context, index) => const Divider(),
       ),
     );
   }
@@ -130,3 +166,39 @@ class DioErrorWidget extends StatelessWidget {
     return Text(error.toString());
   }
 }
+
+
+// closedPullRequests.when(
+//         data: (data) => ListView.separated(
+//           itemCount: data.length,
+//           itemBuilder: (context, index) {
+//             final PullRequest pullRequest = data[index];
+//             final leadingIcon = pullRequest.draft
+//                 ? draftPullRequestIcon
+//                 : pullRequest.mergedAt != null
+//                     ? mergedPullRequestIcon
+//                     : pullRequest.state == "closed"
+//                         ? closedPullRequestIcon
+//                         : openPullRequestIcon;
+//             return ListTile(
+//               leading: leadingIcon,
+//               title: Text("${pullRequest.title} #${pullRequest.number}"),
+//               subtitle: Text(
+//                   "by ${pullRequest.userName} at ${timeago.format(pullRequest.updatedAt)}"),
+//               onTap: () => context.beamToNamed('/pr/${pullRequest.id}',
+//                   data: pullRequest),
+//             );
+//           },
+//           separatorBuilder: (context, index) {
+//             return const Divider();
+//           },
+//         ),
+//         loading: () => Center(
+//             child: Lottie.asset('assets/loadingV2.json',
+//                 controller: _loadingController, fit: BoxFit.scaleDown)),
+//         error: (error, stackTrace) => Center(
+//             child: DioErrorWidget(
+//           error: stackTrace,
+//           notFoundController: _notFoundController,
+//         )),
+//       ),

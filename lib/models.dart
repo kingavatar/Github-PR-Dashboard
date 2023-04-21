@@ -18,20 +18,19 @@ class PullRequest {
   final bool draft;
   final Map<String, dynamic> repoData;
 
-  PullRequest({
-    required this.id,
-    required this.number,
-    required this.title,
-    required this.createdAt,
-    required this.closedAt,
-    required this.updatedAt,
-    required this.userName,
-    required this.userImage,
-    required this.state,
-    required this.mergedAt,
+  PullRequest(
+      {required this.id,
+      required this.number,
+      required this.title,
+      required this.createdAt,
+      required this.closedAt,
+      required this.updatedAt,
+      required this.userName,
+      required this.userImage,
+      required this.state,
+      required this.mergedAt,
       required this.draft,
-      required this.repoData
-  });
+      required this.repoData});
 
   factory PullRequest.fromJson(Map<String, dynamic> json) {
     return PullRequest(
@@ -133,28 +132,32 @@ class PullRequestOptions {
   final PullRequestState state;
   final PullRequestSort sort;
   final PullRequestSortDirection direction;
+  final int page;
 
   PullRequestOptions({
     required this.state,
     required this.sort,
     required this.direction,
+    required this.page,
   });
 
   PullRequestOptions copyWith({
     PullRequestState? state,
     PullRequestSort? sort,
     PullRequestSortDirection? direction,
+    int? page,
   }) {
     return PullRequestOptions(
       state: state ?? this.state,
       sort: sort ?? this.sort,
       direction: direction ?? this.direction,
+      page: page ?? this.page,
     );
   }
 
   @override
   String toString() =>
-      'PullRequestOptions(state: $state, sort: $sort, direction: $direction)';
+      'PullRequestOptions(state: $state, sort: $sort, direction: $direction, page: $page)';
 
   @override
   bool operator ==(covariant PullRequestOptions other) {
@@ -162,11 +165,13 @@ class PullRequestOptions {
 
     return other.state == state &&
         other.sort == sort &&
-        other.direction == direction;
+        other.direction == direction &&
+        other.page == page;
   }
 
   @override
-  int get hashCode => state.hashCode ^ sort.hashCode ^ direction.hashCode;
+  int get hashCode =>
+      state.hashCode ^ sort.hashCode ^ direction.hashCode ^ page.hashCode;
 }
 
 class PullRequestOptionsNotifier extends StateNotifier<PullRequestOptions> {
@@ -182,6 +187,10 @@ class PullRequestOptionsNotifier extends StateNotifier<PullRequestOptions> {
 
   void updateDirection(PullRequestSortDirection direction) {
     state = state.copyWith(direction: direction);
+  }
+
+  void updatePage(int page) {
+    state = state.copyWith(page: page);
   }
 
   void updateOptions(PullRequestOptions options) {
