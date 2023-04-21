@@ -49,4 +49,18 @@ final checkRepoProvider = AutoDisposeFutureProvider<bool>.internal(
 );
 
 typedef CheckRepoRef = AutoDisposeFutureProviderRef<bool>;
+String _$isDarkModeHash() => r'93af930defbae2942863608e2b8421fa6e51f0f4';
+
+/// See also [isDarkMode].
+@ProviderFor(isDarkMode)
+final isDarkModeProvider = AutoDisposeProvider<bool>.internal(
+  isDarkMode,
+  name: r'isDarkModeProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$isDarkModeHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef IsDarkModeRef = AutoDisposeProviderRef<bool>;
 // ignore_for_file: unnecessary_raw_strings, subtype_of_sealed_class, invalid_use_of_internal_member, do_not_use_environment, prefer_const_constructors, public_member_api_docs, avoid_private_typedef_functions

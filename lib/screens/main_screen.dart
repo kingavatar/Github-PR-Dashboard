@@ -94,6 +94,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
   @override
   Widget build(BuildContext context) {
+    final addDark = ref.watch(isDarkModeProvider) ? '-dark' : '';
+    ref.listen(optionsProvider, (previous, next) {
+      _pagingController.refresh();
+    });
     return RefreshIndicator(
       onRefresh: () => Future.sync(
         () => _pagingController.refresh(),
@@ -128,14 +132,14 @@ class _MainScreenState extends ConsumerState<MainScreen>
           //   onTryAgain: () => _pagingController.retryLastFailedRequest(),
           // ),
           firstPageProgressIndicatorBuilder: (_) => Center(
-            child: Lottie.asset('assets/loadingV2.json',
+            child: Lottie.asset('assets/loadingV2$addDark.json',
                 controller: _loadingController, fit: BoxFit.scaleDown),
           ),
           // newPageProgressIndicatorBuilder: (_) => NewPageProgressIndicator(),
           noItemsFoundIndicatorBuilder: (_) => Center(
             child: SizedBox(
               width: 200,
-              child: Lottie.asset('assets/404.json',
+              child: Lottie.asset('assets/404$addDark.json',
                   controller: _notFoundController, fit: BoxFit.contain),
             ),
           ),
@@ -147,58 +151,23 @@ class _MainScreenState extends ConsumerState<MainScreen>
   }
 }
 
-class DioErrorWidget extends StatelessWidget {
-  final Object error;
-  final AnimationController notFoundController;
+// class DioErrorWidget extends StatelessWidget {
+//   final Object error;
+//   final AnimationController notFoundController;
 
-  const DioErrorWidget(
-      {super.key, required this.error, required this.notFoundController});
+//   const DioErrorWidget(
+//       {super.key, required this.error, required this.notFoundController});
 
-  @override
-  Widget build(BuildContext context) {
-    if (error is DioError && (error as DioError).response?.statusCode == 404) {
-      return SizedBox(
-        width: 200,
-        child: Lottie.asset('assets/404.json',
-            controller: notFoundController, fit: BoxFit.contain),
-      );
-    }
-    return Text(error.toString());
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     if (error is DioError && (error as DioError).response?.statusCode == 404) {
+//       return SizedBox(
+//         width: 200,
+//         child: Lottie.asset('assets/404${addDark()}.json',
+//             controller: notFoundController, fit: BoxFit.contain),
+//       );
+//     }
+//     return Text(error.toString());
+//   }
+// }
 
-
-// closedPullRequests.when(
-//         data: (data) => ListView.separated(
-//           itemCount: data.length,
-//           itemBuilder: (context, index) {
-//             final PullRequest pullRequest = data[index];
-//             final leadingIcon = pullRequest.draft
-//                 ? draftPullRequestIcon
-//                 : pullRequest.mergedAt != null
-//                     ? mergedPullRequestIcon
-//                     : pullRequest.state == "closed"
-//                         ? closedPullRequestIcon
-//                         : openPullRequestIcon;
-//             return ListTile(
-//               leading: leadingIcon,
-//               title: Text("${pullRequest.title} #${pullRequest.number}"),
-//               subtitle: Text(
-//                   "by ${pullRequest.userName} at ${timeago.format(pullRequest.updatedAt)}"),
-//               onTap: () => context.beamToNamed('/pr/${pullRequest.id}',
-//                   data: pullRequest),
-//             );
-//           },
-//           separatorBuilder: (context, index) {
-//             return const Divider();
-//           },
-//         ),
-//         loading: () => Center(
-//             child: Lottie.asset('assets/loadingV2.json',
-//                 controller: _loadingController, fit: BoxFit.scaleDown)),
-//         error: (error, stackTrace) => Center(
-//             child: DioErrorWidget(
-//           error: stackTrace,
-//           notFoundController: _notFoundController,
-//         )),
-//       ),

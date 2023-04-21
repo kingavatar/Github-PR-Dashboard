@@ -81,7 +81,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
           ),
         ),
       ),
-      body: checkRepo.when(
+      body: Consumer(
+        builder: (context, ref, child) {
+          final addDark = ref.watch(isDarkModeProvider) ? '-dark' : '';
+          return checkRepo.when(
         data: (data) {
           if (completedSearching && data) {
             Navigator.of(context).maybePop();
@@ -89,30 +92,32 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
             return Center(
               child: SizedBox(
                 width: 200,
-                child: Lottie.asset('assets/404.json',
+                    child: Lottie.asset('assets/404$addDark.json',
                     controller: _notFoundController, fit: BoxFit.contain),
               ),
             );
           }
-          return null;
+              return Container();
         },
         loading: () => Center(
-            child: Lottie.asset('assets/loadingV2.json',
+                child: Lottie.asset('assets/loadingV2$addDark.json',
                 controller: _loadingController, fit: BoxFit.scaleDown)),
         error: (error, stackTrace) => Center(
             child: (error as DioError).response?.statusCode == 404
                 ? SizedBox(
                     width: 200,
-                    child: Lottie.asset('assets/404.json',
+                        child: Lottie.asset('assets/404$addDark.json',
                         controller: _notFoundController, fit: BoxFit.contain),
                   )
                 : null),
+          );
+        },
       ),
     );
   }
 }
 
-class _ClearButton extends StatelessWidget {
+class _ClearButton extends ConsumerWidget {
   const _ClearButton(
       {required this.controller, required this.searchController});
 
@@ -120,12 +125,15 @@ class _ClearButton extends StatelessWidget {
   final AnimationController searchController;
 
   @override
-  Widget build(BuildContext context) => IconButton(
-        icon: Lottie.asset('assets/searchToX.json',
+  Widget build(BuildContext context, WidgetRef ref) {
+    final addDark = ref.watch(isDarkModeProvider) ? '-dark' : '';
+    return IconButton(
+      icon: Lottie.asset('assets/searchToX$addDark.json',
             controller: searchController, fit: BoxFit.scaleDown),
         onPressed: () {
           controller.clear();
           searchController.reverse();
         },
-      );
+    );
+  }
 }

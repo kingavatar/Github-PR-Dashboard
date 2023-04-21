@@ -1,12 +1,43 @@
 import 'package:beamer/beamer.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:github_pr_dashboard/providers.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  final MaterialStateProperty<Icon?> thumbIcon =
+      MaterialStateProperty.resolveWith<Icon?>((states) {
+    if (states.contains(MaterialState.selected)) {
+      return const Icon(Icons.dark_mode_outlined);
+    }
+    return const Icon(Icons.light_mode_outlined);
+  });
+
+  bool? _useDarkTheme;
+  bool get useLightMode {
+    switch (ref.read(themModeProvider)) {
+      case ThemeMode.system:
+        return SchedulerBinding.instance.window.platformBrightness ==
+            Brightness.light;
+      case ThemeMode.light:
+        return true;
+      case ThemeMode.dark:
+        return false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final dynamicColor = ref.watch(dynamicColorProvider);
     return ListView(
       children: [
         Padding(
@@ -18,38 +49,48 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
         const Divider(),
-        const SettingsListItem(
-            title: "General", icon: Icons.tune_outlined, location: "/settings"),
-        const SettingsListItem(
-            title: "Appearance",
-            icon: Icons.palette_outlined,
-            location: "/settings"),
+        // const SettingsListItem(title: "Material You", icon: IconData(0xf72e)),
+        Card(
+          elevation: 0,
+          child: ListTile(
+            leading: const Icon(Icons.palette_outlined),
+            title: const Text("Material You"),
+            trailing: Switch(
+              value: dynamicColor,
+              onChanged: (value) => ref
+                  .read(dynamicColorProvider.notifier)
+                  .update((state) => value),
+            ),
+          ),
+        ),
+        Card(
+          elevation: 0,
+          child: ListTile(
+            leading: const Icon(CupertinoIcons.paintbrush),
+            title: const Text("Theme"),
+            trailing: Switch(
+              thumbIcon: thumbIcon,
+              value: _useDarkTheme ?? !useLightMode,
+              onChanged: (value) {
+                setState(() {
+                  _useDarkTheme = value;
+                });
+                if (value) {
+                  ref
+                      .read(themModeProvider.notifier)
+                      .update((state) => ThemeMode.dark);
+                } else {
+                  ref
+                      .read(themModeProvider.notifier)
+                      .update((state) => ThemeMode.light);
+                }
+              },
+            ),
+          ),
+        ),
         const AboutListItem()
       ],
     );
-  }
-}
-
-class SettingsListItem extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final String location;
-
-  const SettingsListItem(
-      {super.key,
-      required this.title,
-      required this.icon,
-      required this.location});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-        elevation: 0,
-        child: ListTile(
-          leading: Icon(icon),
-          title: Text(title),
-          onTap: () {},
-        ));
   }
 }
 

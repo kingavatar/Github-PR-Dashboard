@@ -49,6 +49,7 @@ dependencies:
   cached_network_image: ^3.2.3
   auto_size_text: ^3.0.0
   infinite_scroll_pagination: ^3.2.0
+  dynamic_color: ^1.6.3
 
 
 dev_dependencies:
@@ -90,6 +91,12 @@ flutter:
     - "assets/mark-github.svg"
     - "assets/404.json"
     - "assets/loadingV2.json"
+    - "assets/searchToX-dark.json"
+    - "assets/menuV4-dark.json"
+    - "assets/404-dark.json"
+    - "assets/loadingV2-dark.json"
+    - "assets/settingsV2-dark.json"
+    - "assets/home-dark.json"
 
   # To add assets to your application, add an assets section, like this:
   # assets:

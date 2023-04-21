@@ -1,9 +1,9 @@
 import 'package:beamer/beamer.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 // import 'package:flashy_tab_bar2/flashy_tab_bar2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:github_pr_dashboard/github_theme.dart';
 import 'package:github_pr_dashboard/models.dart';
 import 'package:github_pr_dashboard/providers.dart';
 import 'package:github_pr_dashboard/screens/main_details.dart';
@@ -16,7 +16,7 @@ void main() {
   runApp(ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   MyApp({super.key});
 
   final routerDelegate = BeamerDelegate(
@@ -68,17 +68,29 @@ class MyApp extends StatelessWidget {
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
-    const githubTheme = GithubTheme();
-    return MaterialApp.router(
-      title: 'Github Cloded PR Dashboard',
-      theme: githubTheme.toThemeData(),
-      routerDelegate: routerDelegate,
-      routeInformationParser: BeamerParser(),
-      backButtonDispatcher: BeamerBackButtonDispatcher(
-        delegate: routerDelegate,
-      ),
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    return DynamicColorBuilder(builder: (lightColorScheme, darkColorScheme) {
+      final dynamicColor = ref.watch(dynamicColorProvider);
+      return MaterialApp.router(
+        title: 'Github Cloded PR Dashboard',
+        theme: ThemeData(
+            colorSchemeSeed: dynamicColor ? null : const Color(0XFF0D1117),
+            colorScheme: dynamicColor ? lightColorScheme : null,
+            brightness: Brightness.light,
+            useMaterial3: true),
+        darkTheme: ThemeData(
+            colorSchemeSeed: dynamicColor ? null : const Color(0XFF0D1117),
+            colorScheme: dynamicColor ? darkColorScheme : null,
+            brightness: Brightness.dark,
+            useMaterial3: true),
+        themeMode: ref.watch(themModeProvider),
+        routerDelegate: routerDelegate,
+        routeInformationParser: BeamerParser(),
+        backButtonDispatcher: BeamerBackButtonDispatcher(
+          delegate: routerDelegate,
+        ),
+      );
+    });
   }
 }
 
@@ -135,95 +147,110 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: displayOnlyHome(AppBarTitle()),
-        actions: displayOnlyHome([
-          IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: () => context.beamToNamed('/search')),
-          Builder(
-            builder: (context) => IconButton(
-              splashRadius: 50,
-              // iconSize: 100,
-              icon: Lottie.asset('assets/menuV4.json',
-                  controller: _filterController, fit: BoxFit.contain),
-              onPressed: () {
-                // Controlling BottomSheet
-                if (isBottomSheetOpen) {
-                  _bottomSheetController?.close();
-                  setState(() {
-                    isBottomSheetOpen = false;
-                  });
-                  return;
-                } else {
-                  setState(() {
-                    isBottomSheetOpen = true;
-                  });
-                  _filterController.reset();
-                  _filterController.forward();
-                }
+      appBar: displayOnlyHome(
+        AppBar(
+          title: AppBarTitle(),
+          actions: [
+            IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () => context.beamToNamed('/search')),
+            Builder(
+              builder: (context) => Consumer(
+                builder: (context, ref, child) {
+                  final addDark = ref.watch(isDarkModeProvider) ? '-dark' : '';
+                  return IconButton(
+                    splashRadius: 50,
+                    // iconSize: 100,
+                    icon: Lottie.asset('assets/menuV4$addDark.json',
+                        controller: _filterController, fit: BoxFit.contain),
+                    onPressed: () {
+                      // Controlling BottomSheet
+                      if (isBottomSheetOpen) {
+                        _bottomSheetController?.close();
+                        setState(() {
+                          isBottomSheetOpen = false;
+                        });
+                        return;
+                      } else {
+                        setState(() {
+                          isBottomSheetOpen = true;
+                        });
+                        _filterController.reset();
+                        _filterController.forward();
+                      }
 
-                _bottomSheetController =
-                    Scaffold.of(context).showBottomSheet<void>(
-                  constraints: const BoxConstraints(maxWidth: 640),
-                  elevation: 8,
-                  enableDrag: true,
-                  clipBehavior: Clip
-                      .antiAliasWithSaveLayer, // for ripple to overflow out of bottomsheet
-                  (context) {
-                    return const BottomModalWidget();
-                  },
-                );
-                _bottomSheetController?.closed
-                    .then((_) => _filterController.reverse());
-              },
+                      _bottomSheetController =
+                          Scaffold.of(context).showBottomSheet<void>(
+                        constraints: const BoxConstraints(maxWidth: 640),
+                        elevation: 8,
+                        enableDrag: true,
+                        clipBehavior: Clip
+                            .antiAliasWithSaveLayer, // for ripple to overflow out of bottomsheet
+                        (context) {
+                          return const BottomModalWidget();
+                        },
+                      );
+                      _bottomSheetController?.closed
+                          .then((_) => _filterController.reverse());
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ]),
+          ],
+        ),
       ),
       body: IndexedStack(
           index: _currentIndex,
           children: const [MainScreen(), SettingsScreen()]),
-      bottomNavigationBar: NavigationBar(
-          selectedIndex: _currentIndex,
-          onDestinationSelected: (int index) {
-            setState(() => _currentIndex = index);
-            Beamer.of(context).update(
-              configuration: RouteInformation(
-                location: index == 0 ? '/?tab=pr' : '/?tab=settings',
-              ),
-              rebuild: false,
-            );
-            if (index == 0) {
-              _settingController.reverse();
-              if (_homeController.status == AnimationStatus.dismissed) {
-                _homeController.reset();
-                _homeController.forward();
-              } else {
-                _homeController.reverse();
-              }
-            } else if (index == 1) {
-              _homeController.forward();
-              if (_settingController.status == AnimationStatus.dismissed) {
-                _settingController.reset();
-                _settingController.forward();
-              } else {
+      bottomNavigationBar: Consumer(
+        builder: (context, ref, child) {
+          final addDark = ref.watch(isDarkModeProvider) ? '-dark' : '';
+          return NavigationBar(
+            selectedIndex: _currentIndex,
+            onDestinationSelected: (int index) {
+              setState(() => _currentIndex = index);
+              Beamer.of(context).update(
+                configuration: RouteInformation(
+                  location: index == 0 ? '/?tab=pr' : '/?tab=settings',
+                ),
+                rebuild: false,
+              );
+              if (index == 0) {
                 _settingController.reverse();
+                if (_homeController.status == AnimationStatus.dismissed) {
+                  _homeController.reset();
+                  _homeController.forward();
+                } else {
+                  _homeController.reverse();
+                }
+              } else if (index == 1) {
+                _homeController.forward();
+                if (_settingController.status == AnimationStatus.dismissed) {
+                  _settingController.reset();
+                  _settingController.forward();
+                } else {
+                  _settingController.reverse();
+                }
               }
-            }
-          },
-          destinations: <Widget>[
-            NavigationDestination(
-              icon: Lottie.asset('assets/home.json',
-                  width: 28, controller: _homeController, fit: BoxFit.contain),
-              label: 'Home',
-            ),
-            NavigationDestination(
-              icon: Lottie.asset('assets/settingsV2.json',
-                  controller: _settingController, fit: BoxFit.contain),
-              label: 'Settings',
-            ),
-          ]),
+            },
+            destinations: <Widget>[
+              NavigationDestination(
+                icon: Lottie.asset('assets/home$addDark.json',
+                    width: 28,
+                    controller: _homeController,
+                    fit: BoxFit.contain),
+                label: 'Home',
+              ),
+              NavigationDestination(
+                icon: Lottie.asset('assets/settingsV2$addDark.json',
+                    controller: _settingController, fit: BoxFit.contain),
+                label: 'Settings',
+              ),
+            ],
+          );
+        },
+      ),
       // Tried with Flashybar but ascthetics of Material 3 are better
       // FlashyTabBar(
       //   animationCurve: Curves.linear,
@@ -251,18 +278,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 class AppBarTitle extends ConsumerWidget {
   AppBarTitle({super.key});
 
-  final githubIcon = SvgPicture.asset(
-    "assets/mark-github.svg",
-    width: 24,
-    semanticsLabel: 'Github Icon',
-    fit: BoxFit.contain,
-  );
+  SvgPicture githubIcon(Color color) {
+    return SvgPicture.asset(
+      "assets/mark-github.svg",
+      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      width: 24,
+      semanticsLabel: 'Github Icon',
+      fit: BoxFit.contain,
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.watch(repoProvider);
+    final isDark = ref.watch(isDarkModeProvider);
     return Row(children: [
-      githubIcon,
+      githubIcon(isDark ? const Color(0XFFFFFFFF) : const Color(0XFF000000)),
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
         child: RichText(

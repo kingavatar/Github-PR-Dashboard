@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:github_pr_dashboard/models.dart';
 import 'package:github_pr_dashboard/repository.dart';
@@ -36,4 +38,23 @@ Future<bool> checkRepo(CheckRepoRef ref) async {
   final gitHubService = ref.watch(githubRepositoryProvider);
   final repo = ref.watch(repoProvider);
   return gitHubService.checkRepoExists(repo: repo);
+}
+
+
+final themModeProvider =
+    StateProvider.autoDispose<ThemeMode>((ref) => ThemeMode.system);
+
+final dynamicColorProvider = StateProvider.autoDispose<bool>(((ref) => true));
+
+@riverpod
+bool isDarkMode(IsDarkModeRef ref) {
+  switch (ref.watch(themModeProvider)) {
+    case ThemeMode.system:
+      return SchedulerBinding.instance.window.platformBrightness ==
+          Brightness.dark;
+    case ThemeMode.dark:
+      return true;
+    case ThemeMode.light:
+      return false;
+  }
 }
