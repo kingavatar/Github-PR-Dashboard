@@ -38,6 +38,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final dynamicColor = ref.watch(dynamicColorProvider);
+    final confirmOnExit = ref.watch(confirmOnExitProvider);
     return ListView(
       children: [
         Padding(
@@ -49,7 +50,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ),
         const Divider(),
-        // const SettingsListItem(title: "Material You", icon: IconData(0xf72e)),
+        Card(
+          elevation: 0,
+          child: ListTile(
+            leading: const Icon(Icons.exit_to_app_outlined),
+            title: const Text("Confirm On Exit"),
+            trailing: Switch(
+              value: confirmOnExit,
+              onChanged: (value) => ref
+                  .read(confirmOnExitProvider.notifier)
+                  .update((state) => value),
+            ),
+          ),
+        ),
         Card(
           elevation: 0,
           child: ListTile(

@@ -40,11 +40,12 @@ Future<bool> checkRepo(CheckRepoRef ref) async {
   return gitHubService.checkRepoExists(repo: repo);
 }
 
+final confirmOnExitProvider = StateProvider.autoDispose<bool>((ref) => true);
 
 final themModeProvider =
     StateProvider.autoDispose<ThemeMode>((ref) => ThemeMode.system);
 
-final dynamicColorProvider = StateProvider.autoDispose<bool>(((ref) => true));
+final dynamicColorProvider = StateProvider.autoDispose<bool>((ref) => true);
 
 @riverpod
 bool isDarkMode(IsDarkModeRef ref) {

@@ -1,7 +1,7 @@
 import 'package:beamer/beamer.dart';
 import 'package:dynamic_color/dynamic_color.dart';
-// import 'package:flashy_tab_bar2/flashy_tab_bar2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_exit_app/flutter_exit_app.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:github_pr_dashboard/models.dart';
@@ -94,14 +94,15 @@ class MyApp extends ConsumerWidget {
   }
 }
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   final int initialIndex;
   const HomeScreen({super.key, required this.initialIndex});
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with TickerProviderStateMixin {
   int _currentIndex = 0;
   late AnimationController _settingController;
   late AnimationController _homeController;
@@ -146,131 +147,145 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: displayOnlyHome(
-        AppBar(
-          title: AppBarTitle(),
-          actions: [
-            IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () => context.beamToNamed('/search')),
-            Builder(
-              builder: (context) => Consumer(
-                builder: (context, ref, child) {
-                  final addDark = ref.watch(isDarkModeProvider) ? '-dark' : '';
-                  return IconButton(
-                    splashRadius: 50,
-                    // iconSize: 100,
-                    icon: Lottie.asset('assets/menuV4$addDark.json',
-                        controller: _filterController, fit: BoxFit.contain),
-                    onPressed: () {
-                      // Controlling BottomSheet
-                      if (isBottomSheetOpen) {
-                        _bottomSheetController?.close();
-                        setState(() {
-                          isBottomSheetOpen = false;
-                        });
-                        return;
-                      } else {
-                        setState(() {
-                          isBottomSheetOpen = true;
-                        });
-                        _filterController.reset();
-                        _filterController.forward();
-                      }
+    final addDark = ref.watch(isDarkModeProvider) ? '-dark' : '';
+    return WillPopScope(
+      onWillPop: () async {
+        final confirmOnExit = ref.watch(confirmOnExitProvider);
+        if (!confirmOnExit) {
+          return true;
+        }
+        final value = await showDialog<bool>(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              content: const Text('Are you sure you want to exit?'),
+              actions: <Widget>[
+                ElevatedButton(
+                  child: const Text('No'),
+                  onPressed: () {
+                    Beamer.of(context).navigator.pop(false);
+                  },
+                ),
+                ElevatedButton(
+                  child: const Text('Yes, exit'),
+                  onPressed: () {
+                    // call this to exit app
+                    FlutterExitApp.exitApp();
+                  },
+                ),
+              ],
+            );
+          },
+        );
 
-                      _bottomSheetController =
-                          Scaffold.of(context).showBottomSheet<void>(
-                        constraints: const BoxConstraints(maxWidth: 640),
-                        elevation: 8,
-                        enableDrag: true,
-                        clipBehavior: Clip
-                            .antiAliasWithSaveLayer, // for ripple to overflow out of bottomsheet
-                        (context) {
-                          return const BottomModalWidget();
-                        },
-                      );
-                      _bottomSheetController?.closed
-                          .then((_) => _filterController.reverse());
-                    },
-                  );
-                },
+        return value == true;
+      },
+      child: Scaffold(
+        appBar: displayOnlyHome(
+          AppBar(
+            title: AppBarTitle(),
+            actions: [
+              IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () => context.beamToNamed('/search')),
+              Builder(
+                builder: (context) => Consumer(
+                  builder: (context, ref, child) {
+                    final addDark =
+                        ref.watch(isDarkModeProvider) ? '-dark' : '';
+                    return IconButton(
+                      splashRadius: 50,
+                      // iconSize: 100,
+                      icon: Lottie.asset('assets/menuV4$addDark.json',
+                          controller: _filterController, fit: BoxFit.contain),
+                      onPressed: () {
+                        // Controlling BottomSheet
+                        if (isBottomSheetOpen) {
+                          _bottomSheetController?.close();
+                          setState(() {
+                            isBottomSheetOpen = false;
+                          });
+                          return;
+                        } else {
+                          setState(() {
+                            isBottomSheetOpen = true;
+                          });
+                          _filterController.reset();
+                          _filterController.forward();
+                        }
+
+                        _bottomSheetController =
+                            Scaffold.of(context).showBottomSheet<void>(
+                          constraints: const BoxConstraints(maxWidth: 640),
+                          elevation: 8,
+                          enableDrag: true,
+                          clipBehavior: Clip
+                              .antiAliasWithSaveLayer, // for ripple to overflow out of bottomsheet
+                          (context) {
+                            return const BottomModalWidget();
+                          },
+                        );
+                        _bottomSheetController?.closed
+                            .then((_) => _filterController.reverse());
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
+            ],
+          ),
+        ),
+        body: IndexedStack(
+            index: _currentIndex,
+          children: const [
+            MainScreen(),
+            SettingsScreen(),
+          ],
+        ),
+        bottomNavigationBar: NavigationBar(
+              selectedIndex: _currentIndex,
+              onDestinationSelected: (int index) {
+                setState(() => _currentIndex = index);
+                Beamer.of(context).update(
+                  configuration: RouteInformation(
+                    location: index == 0 ? '/?tab=pr' : '/?tab=settings',
+                  ),
+                  rebuild: false,
+                );
+                if (index == 0) {
+                  _settingController.reverse();
+                  if (_homeController.status == AnimationStatus.dismissed) {
+                    _homeController.reset();
+                    _homeController.forward();
+                  } else {
+                    _homeController.reverse();
+                  }
+                } else if (index == 1) {
+                  _homeController.forward();
+                  if (_settingController.status == AnimationStatus.dismissed) {
+                    _settingController.reset();
+                    _settingController.forward();
+                  } else {
+                    _settingController.reverse();
+                  }
+                }
+              },
+              destinations: <Widget>[
+                NavigationDestination(
+                  icon: Lottie.asset('assets/home$addDark.json',
+                      width: 28,
+                      controller: _homeController,
+                      fit: BoxFit.contain),
+                  label: 'Home',
+                ),
+                NavigationDestination(
+                  icon: Lottie.asset('assets/settingsV2$addDark.json',
+                      controller: _settingController, fit: BoxFit.contain),
+                  label: 'Settings',
+                ),
           ],
         ),
       ),
-      body: IndexedStack(
-          index: _currentIndex,
-          children: const [MainScreen(), SettingsScreen()]),
-      bottomNavigationBar: Consumer(
-        builder: (context, ref, child) {
-          final addDark = ref.watch(isDarkModeProvider) ? '-dark' : '';
-          return NavigationBar(
-            selectedIndex: _currentIndex,
-            onDestinationSelected: (int index) {
-              setState(() => _currentIndex = index);
-              Beamer.of(context).update(
-                configuration: RouteInformation(
-                  location: index == 0 ? '/?tab=pr' : '/?tab=settings',
-                ),
-                rebuild: false,
-              );
-              if (index == 0) {
-                _settingController.reverse();
-                if (_homeController.status == AnimationStatus.dismissed) {
-                  _homeController.reset();
-                  _homeController.forward();
-                } else {
-                  _homeController.reverse();
-                }
-              } else if (index == 1) {
-                _homeController.forward();
-                if (_settingController.status == AnimationStatus.dismissed) {
-                  _settingController.reset();
-                  _settingController.forward();
-                } else {
-                  _settingController.reverse();
-                }
-              }
-            },
-            destinations: <Widget>[
-              NavigationDestination(
-                icon: Lottie.asset('assets/home$addDark.json',
-                    width: 28,
-                    controller: _homeController,
-                    fit: BoxFit.contain),
-                label: 'Home',
-              ),
-              NavigationDestination(
-                icon: Lottie.asset('assets/settingsV2$addDark.json',
-                    controller: _settingController, fit: BoxFit.contain),
-                label: 'Settings',
-              ),
-            ],
-          );
-        },
-      ),
-      // Tried with Flashybar but ascthetics of Material 3 are better
-      // FlashyTabBar(
-      //   animationCurve: Curves.linear,
-      //   selectedIndex: _currentIndex,
-      //   iconSize: 30,
-      //   onItemSelected: (index) {
-      //     setState(() => _currentIndex = index);
-      //     _routerDelegates[_currentIndex].update(rebuild: false);
-      //   },
-      //   items: [
-      //     FlashyTabBarItem(
-      //       icon: const Icon(Icons.event),
-      //       title: const Text('Events'),
-      //     ),
-      //     FlashyTabBarItem(
-      //       icon: const Icon(Icons.settings),
-      //       title: const Text('Settings'),
-      //     ),
-      //   ],
-      // ),
     );
   }
 }

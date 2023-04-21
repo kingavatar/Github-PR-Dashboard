@@ -64,6 +64,8 @@ class _MainScreenState extends ConsumerState<MainScreen>
     });
   }
 
+
+
   Future<void> _fetchPage(int pageKey) async {
     try {
       final gitHubService = ref.read(githubRepositoryProvider);
