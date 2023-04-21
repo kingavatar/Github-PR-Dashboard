@@ -37,6 +37,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
   void dispose() {
     _searchController.dispose();
     _notFoundController.dispose();
+    _loadingController.dispose();
     controller.dispose();
     super.dispose();
   }

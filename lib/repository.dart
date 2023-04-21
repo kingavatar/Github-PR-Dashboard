@@ -9,13 +9,14 @@ class GithubRepository {
 
   const GithubRepository(this._dio, this._ref);
 
-  Future<List<PullRequest>> getClosedPullRequests(Repo repo) async {
-    final response = await _dio.get('/repos/${repo.owner}/${repo.name}/pulls',
-        queryParameters: {
-          'state': 'closed',
-          'sort': 'updated',
-          'direction': 'desc'
-        });
+  Future<List<PullRequest>> getClosedPullRequests(
+      Repo repo, PullRequestOptions options) async {
+    final response = await _dio
+        .get('/repos/${repo.owner}/${repo.name}/pulls', queryParameters: {
+      'state': options.state.name,
+      'sort': options.sort.name,
+      'direction': options.direction.name
+    });
 
     if (response.statusCode == 200) {
       return List<PullRequest>.from(response.data

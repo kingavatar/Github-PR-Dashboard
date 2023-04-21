@@ -21,14 +21,19 @@ final repoProvider =
   return RepoNotifier(const Repo(owner: 'flutter', name: 'flutter'));
 });
 
+final optionsProvider = StateNotifierProvider.autoDispose<
+    PullRequestOptionsNotifier, PullRequestOptions>((ref) {
+  ref.keepAlive();
+  return PullRequestOptionsNotifier(PullRequestOptions(
+      state: PullRequestState.closed,
+      sort: PullRequestSort.updated,
+      direction: PullRequestSortDirection.desc));
+});
+
 @riverpod
 Future<List<PullRequest>> closedPullRequests(ClosedPullRequestsRef ref) async {
   final gitHubService = ref.watch(githubRepositoryProvider);
   final repo = ref.watch(repoProvider);
-  return gitHubService.getClosedPullRequests(repo);
+  final options = ref.watch(optionsProvider);
+  return gitHubService.getClosedPullRequests(repo, options);
 }
-
-final searchStatusCodeProvider = StateProvider.autoDispose<int?>((ref) {
-  ref.keepAlive();
-  return null;
-});
