@@ -123,38 +123,43 @@ Beamer, which was used for navigation and routing, also presented some challenge
 
 ## Screenshots
 
-
-### Pull to Refresh, Searching and Filtering/Sorting
-
-
-<div style="display: flex; justify-content: space-around;">
-<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/pulltorefresh.gif" width="200" />
-
-<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/wezterm.gif" width="200" />
-
-<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/filter.gif" width="200" />
-</div>
-
-
-### Details, Animated Icons and 404
+<table align="center">
+<tr>
+    <td>Pull to Refresh</td>
+     <td>Searching</td>
+     <td>Filtering/Sorting</td>
+</tr>
+<tr>
+<td><img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/pulltorefresh.gif" width="200" /></td>
+<td><img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/wezterm.gif" width="200" /></td>
+<td><img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/filter.gif" width="200" /></td>
+</tr>
+</table>
 
 
-<div style="display: flex; justify-content: space-around;">
+<table align="center">
+<tr>
+    <td>Details</td>
+     <td>Animated Icons</td>
+     <td>404</td>
+</tr>
+<tr>
+<td><img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/details.gif" width="200" /></td>
+<td><img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/animatedIcons.gif" width="200" /></td>
+<td><img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/404.gif" width="200" /></td>
+</tr>
+</table>
 
-<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/details.gif" width="200" />
-<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/animatedIcons.gif" width="200" />
-<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/404.gif" width="200" />
 
-</div>
-
-
-### DarkMode , Dynamic and Confirm To Exit
-
-
-<div style="display: flex; justify-content: space-around;">
-
-<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/darkmode.gif" width="200" />
-<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/dynamic.gif" width="200" />
-<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/confirmToExit.gif" width="200" />
-
-</div>
+<table align="center">
+<tr>
+    <td>DarkMode</td>
+     <td>Dynamic</td>
+     <td>Confirm To Exit</td>
+</tr>
+<tr>
+<td><img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/darkmode.gif" width="200" />  </td>
+<td><img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/dynamic.gif" width="200" />  </td>
+<td><img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/confirmToExit.gif" width="200" /> </td>
+</tr>
+</table>
