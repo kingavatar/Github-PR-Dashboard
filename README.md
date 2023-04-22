@@ -122,3 +122,39 @@ Exiting the app was weirdly not handled using native methods which used native c
 Beamer, which was used for navigation and routing, also presented some challenges and took some time to get used to.
 
 ## Screenshots
+
+
+### Pull to Refresh, Searching and Filtering/Sorting
+
+
+<div style="display: flex; justify-content: space-around;">
+<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/pulltorefresh.gif" width="200" />
+
+<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/wezterm.gif" width="200" />
+
+<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/filter.gif" width="200" />
+</div>
+
+
+### Details, Animated Icons and 404
+
+
+<div style="display: flex; justify-content: space-around;">
+
+<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/details.gif" width="200" />
+<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/animatedIcons.gif" width="200" />
+<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/404.gif" width="200" />
+
+</div>
+
+
+### DarkMode , Dynamic and Confirm To Exit
+
+
+<div style="display: flex; justify-content: space-around;">
+
+<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/darkmode.gif" width="200" />
+<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/dynamic.gif" width="200" />
+<img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/confirmToExit.gif" width="200" />
+
+</div>
