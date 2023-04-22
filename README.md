@@ -124,7 +124,7 @@ Beamer, which was used for navigation and routing, also presented some challenge
 ## Screenshots
 
 <table align="center">
-<tr>
+<tr align="center">
     <td>Pull to Refresh</td>
      <td>Searching</td>
      <td>Filtering/Sorting</td>
@@ -138,7 +138,7 @@ Beamer, which was used for navigation and routing, also presented some challenge
 
 
 <table align="center">
-<tr>
+<tr align="center">
     <td>Details</td>
      <td>Animated Icons</td>
      <td>404</td>
@@ -152,7 +152,7 @@ Beamer, which was used for navigation and routing, also presented some challenge
 
 
 <table align="center">
-<tr>
+<tr align="center">
     <td>DarkMode</td>
      <td>Dynamic</td>
      <td>Confirm To Exit</td>
@@ -161,5 +161,14 @@ Beamer, which was used for navigation and routing, also presented some challenge
 <td><img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/darkmode.gif" width="200" />  </td>
 <td><img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/dynamic.gif" width="200" />  </td>
 <td><img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/confirmToExit.gif" width="200" /> </td>
+</tr>
+</table>
+
+<table align="center">
+<tr align="center">
+<td>Change Layout on Resize</td>
+</tr>
+<tr>
+<td><img src="https://raw.githubusercontent.com/kingavatar/github-pr-dashboard/assets/resize.gif"/></td> 
 </tr>
 </table>
