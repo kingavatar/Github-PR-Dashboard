@@ -4,12 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_exit_app/flutter_exit_app.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:github_pr_dashboard/animations.dart';
 import 'package:github_pr_dashboard/models.dart';
 import 'package:github_pr_dashboard/providers.dart';
 import 'package:github_pr_dashboard/screens/main_details.dart';
 import 'package:github_pr_dashboard/screens/main_screen.dart';
 import 'package:github_pr_dashboard/screens/search_screen.dart';
 import 'package:github_pr_dashboard/screens/settings_screen.dart';
+import 'package:github_pr_dashboard/widgets/navigation_bar.dart';
+import 'package:github_pr_dashboard/widgets/navigation_rail.dart';
 import 'package:lottie/lottie.dart';
 
 void main() {
@@ -72,7 +75,7 @@ class MyApp extends ConsumerWidget {
     return DynamicColorBuilder(builder: (lightColorScheme, darkColorScheme) {
       final dynamicColor = ref.watch(dynamicColorProvider);
       return MaterialApp.router(
-        title: 'Github Cloded PR Dashboard',
+        title: 'Github Closed PR Dashboard',
         theme: ThemeData(
             colorSchemeSeed: dynamicColor ? null : const Color(0XFF0D1117),
             colorScheme: dynamicColor ? lightColorScheme : null,
@@ -112,6 +115,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   bool showSearchBar = false;
   bool isBottomSheetOpen = false;
   PersistentBottomSheetController<void>? _bottomSheetController;
+  late final _controller = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      reverseDuration: const Duration(milliseconds: 1250),
+      value: 0,
+      vsync: this);
+  late final _railAnimation = RailAnimation(parent: _controller);
+  late final _barAnimation = BarAnimation(parent: _controller);
+  bool controllerInitialized = false;
 
   @override
   void initState() {
@@ -134,6 +145,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     _searchController.dispose();
     _filterController.dispose();
     _controllerRepository.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -146,13 +158,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final AnimationStatus status = _controller.status;
+    if (MediaQuery.of(context).size.width > 600) {
+      if (status != AnimationStatus.forward &&
+          status != AnimationStatus.completed) {
+        _controller.forward();
+      }
+    } else {
+      if (status != AnimationStatus.reverse &&
+          status != AnimationStatus.dismissed) {
+        _controller.reverse();
+      }
+    }
+    if (!controllerInitialized) {
+      controllerInitialized = true;
+      _controller.value = MediaQuery.of(context).size.width > 600 ? 1 : 0;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final addDark = ref.watch(isDarkModeProvider) ? '-dark' : '';
+    final List<Destination> destinations = <Destination>[
+      Destination(
+          icon: Lottie.asset('assets/home$addDark.json',
+              width: 28, controller: _homeController, fit: BoxFit.contain),
+          label: "Home"),
+      Destination(
+          icon: Lottie.asset('assets/settingsV2$addDark.json',
+              controller: _settingController, fit: BoxFit.contain),
+          label: "Settings")
+    ];
     return WillPopScope(
       onWillPop: () async {
         final confirmOnExit = ref.watch(confirmOnExitProvider);
         if (!confirmOnExit) {
           return true;
+        }
+        if (isBottomSheetOpen) {
+          _bottomSheetController?.close();
+          setState(() {
+            isBottomSheetOpen = false;
+          });
+          return false;
         }
         final value = await showDialog<bool>(
           context: context,
@@ -180,112 +231,151 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
         return value == true;
       },
-      child: Scaffold(
-        appBar: displayOnlyHome(
-          AppBar(
-            title: AppBarTitle(),
-            actions: [
-              IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () => context.beamToNamed('/search')),
-              Builder(
-                builder: (context) => Consumer(
-                  builder: (context, ref, child) {
-                    final addDark =
-                        ref.watch(isDarkModeProvider) ? '-dark' : '';
-                    return IconButton(
-                      splashRadius: 50,
-                      // iconSize: 100,
-                      icon: Lottie.asset('assets/menuV4$addDark.json',
-                          controller: _filterController, fit: BoxFit.contain),
-                      onPressed: () {
-                        // Controlling BottomSheet
-                        if (isBottomSheetOpen) {
-                          _bottomSheetController?.close();
-                          setState(() {
-                            isBottomSheetOpen = false;
-                          });
-                          return;
-                        } else {
-                          setState(() {
-                            isBottomSheetOpen = true;
-                          });
-                          _filterController.reset();
-                          _filterController.forward();
-                        }
-
-                        _bottomSheetController =
-                            Scaffold.of(context).showBottomSheet<void>(
-                          constraints: const BoxConstraints(maxWidth: 640),
-                          elevation: 8,
-                          enableDrag: true,
-                          clipBehavior: Clip
-                              .antiAliasWithSaveLayer, // for ripple to overflow out of bottomsheet
-                          (context) {
-                            return const BottomModalWidget();
-                          },
-                        );
-                        _bottomSheetController?.closed
-                            .then((_) => _filterController.reverse());
-                      },
+      child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            return Row(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                MyNavigationRail(
+                  railAnimation: _railAnimation,
+                  selectedIndex: _currentIndex,
+                  onDestinationSelected: (int index) {
+                    setState(() => _currentIndex = index);
+                    Beamer.of(context).update(
+                      configuration: RouteInformation(
+                        location: index == 0 ? '/?tab=pr' : '/?tab=settings',
+                      ),
+                      rebuild: false,
                     );
+                    if (index == 0) {
+                      _settingController.reverse();
+                      if (_homeController.status == AnimationStatus.dismissed) {
+                        _homeController.reset();
+                        _homeController.forward();
+                      } else {
+                        _homeController.reverse();
+                      }
+                    } else if (index == 1) {
+                      _homeController.forward();
+                      if (_settingController.status ==
+                          AnimationStatus.dismissed) {
+                        _settingController.reset();
+                        _settingController.forward();
+                      } else {
+                        _settingController.reverse();
+                      }
+                    }
                   },
+                  destinations: destinations,
                 ),
-              ),
-            ],
-          ),
-        ),
-        body: IndexedStack(
-            index: _currentIndex,
-          children: const [
-            MainScreen(),
-            SettingsScreen(),
-          ],
-        ),
-        bottomNavigationBar: NavigationBar(
-              selectedIndex: _currentIndex,
-              onDestinationSelected: (int index) {
-                setState(() => _currentIndex = index);
-                Beamer.of(context).update(
-                  configuration: RouteInformation(
-                    location: index == 0 ? '/?tab=pr' : '/?tab=settings',
+                Expanded(
+                  child: Scaffold(
+                    appBar: displayOnlyHome(
+                      AppBar(
+                        title: AppBarTitle(),
+                        actions: [
+                          IconButton(
+                              icon: const Icon(Icons.search),
+                              onPressed: () => context.beamToNamed('/search')),
+                          Builder(
+                            builder: (context) => Consumer(
+                              builder: (context, ref, child) {
+                                final addDark = ref.watch(isDarkModeProvider)
+                                    ? '-dark'
+                                    : '';
+                                return IconButton(
+                                  splashRadius: 50,
+                                  // iconSize: 100,
+                                  icon: Lottie.asset(
+                                      'assets/menuV4$addDark.json',
+                                      controller: _filterController,
+                                      fit: BoxFit.contain),
+                                  onPressed: () {
+                                    // Controlling BottomSheet
+                                    if (isBottomSheetOpen) {
+                                      _bottomSheetController?.close();
+                                      setState(() {
+                                        isBottomSheetOpen = false;
+                                      });
+                                      return;
+                                    } else {
+                                      setState(() {
+                                        isBottomSheetOpen = true;
+                                      });
+                                      _filterController.reset();
+                                      _filterController.forward();
+                                    }
+
+                                    _bottomSheetController =
+                                        Scaffold.of(context)
+                                            .showBottomSheet<void>(
+                                      constraints:
+                                          const BoxConstraints(maxWidth: 640),
+                                      elevation: 8,
+                                      enableDrag: true,
+                                      clipBehavior: Clip
+                                          .antiAliasWithSaveLayer, // for ripple to overflow out of bottomsheet
+                                      (context) {
+                                        return const BottomModalWidget();
+                                      },
+                                    );
+                                    _bottomSheetController?.closed.then(
+                                        (_) => _filterController.reverse());
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    body: IndexedStack(
+                      index: _currentIndex,
+                      children: const [
+                        MainScreen(),
+                        SettingsScreen(),
+                      ],
+                    ),
+                    bottomNavigationBar: MyBottomNavigationBar(
+                      barAnimation: _barAnimation,
+                      selectedIndex: _currentIndex,
+                      onDestinationSelected: (int index) {
+                        setState(() => _currentIndex = index);
+                        Beamer.of(context).update(
+                          configuration: RouteInformation(
+                            location:
+                                index == 0 ? '/?tab=pr' : '/?tab=settings',
+                          ),
+                          rebuild: false,
+                        );
+                        if (index == 0) {
+                          _settingController.reverse();
+                          if (_homeController.status ==
+                              AnimationStatus.dismissed) {
+                            _homeController.reset();
+                            _homeController.forward();
+                          } else {
+                            _homeController.reverse();
+                          }
+                        } else if (index == 1) {
+                          _homeController.forward();
+                          if (_settingController.status ==
+                              AnimationStatus.dismissed) {
+                            _settingController.reset();
+                            _settingController.forward();
+                          } else {
+                            _settingController.reverse();
+                          }
+                        }
+                      },
+                      destinations: destinations,
+                    ),
                   ),
-                  rebuild: false,
-                );
-                if (index == 0) {
-                  _settingController.reverse();
-                  if (_homeController.status == AnimationStatus.dismissed) {
-                    _homeController.reset();
-                    _homeController.forward();
-                  } else {
-                    _homeController.reverse();
-                  }
-                } else if (index == 1) {
-                  _homeController.forward();
-                  if (_settingController.status == AnimationStatus.dismissed) {
-                    _settingController.reset();
-                    _settingController.forward();
-                  } else {
-                    _settingController.reverse();
-                  }
-                }
-              },
-              destinations: <Widget>[
-                NavigationDestination(
-                  icon: Lottie.asset('assets/home$addDark.json',
-                      width: 28,
-                      controller: _homeController,
-                      fit: BoxFit.contain),
-                  label: 'Home',
                 ),
-                NavigationDestination(
-                  icon: Lottie.asset('assets/settingsV2$addDark.json',
-                      controller: _settingController, fit: BoxFit.contain),
-                  label: 'Settings',
-                ),
-          ],
-        ),
-      ),
+              ],
+            );
+          }),
     );
   }
 }

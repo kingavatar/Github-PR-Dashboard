@@ -55,6 +55,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: ListTile(
             leading: const Icon(Icons.exit_to_app_outlined),
             title: const Text("Confirm On Exit"),
+            subtitle: const Text("Only for Android and IOS Applications"),
             trailing: Switch(
               value: confirmOnExit,
               onChanged: (value) => ref

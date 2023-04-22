@@ -48,35 +48,38 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
     return Scaffold(
       appBar: AppBar(
         title: Center(
-          child: TextField(
-            controller: controller,
-            textInputAction: TextInputAction.search,
-            onSubmitted: (value) {
-              final repo = value.split("/");
-              if (repo.length != 2) {
-              } else {
-                ref
-                    .read(repoProvider.notifier)
-                    .updateRepo(owner: repo[0], name: repo[1]);
-                setState(() => completedSearching = true);
-              }
-              
-            },
-            onChanged: (value) {
-              if (value.isNotEmpty) {
-                if (_searchController.status == AnimationStatus.dismissed) {
-                  _searchController.reset();
-                  _searchController.forward();
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: TextField(
+              controller: controller,
+              textInputAction: TextInputAction.search,
+              onSubmitted: (value) {
+                final repo = value.split("/");
+                if (repo.length != 2) {
+                } else {
+                  ref
+                      .read(repoProvider.notifier)
+                      .updateRepo(owner: repo[0], name: repo[1]);
+                  setState(() => completedSearching = true);
                 }
-              } else {
-                _searchController.reverse();
-                setState(() => completedSearching = false);
-              }
-            },
-            decoration: InputDecoration(
-              suffixIcon: _ClearButton(
-                  controller: controller, searchController: _searchController),
-              hintText: 'Enter (e.g. flutter/flutter)',
+              },
+              onChanged: (value) {
+                if (value.isNotEmpty) {
+                  if (_searchController.status == AnimationStatus.dismissed) {
+                    _searchController.reset();
+                    _searchController.forward();
+                  }
+                } else {
+                  _searchController.reverse();
+                  setState(() => completedSearching = false);
+                }
+              },
+              decoration: InputDecoration(
+                suffixIcon: _ClearButton(
+                    controller: controller,
+                    searchController: _searchController),
+                hintText: 'Enter (e.g. flutter/flutter)',
+              ),
             ),
           ),
         ),

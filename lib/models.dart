@@ -3,6 +3,14 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lottie/lottie.dart';
+
+class Destination {
+  final LottieBuilder icon;
+  final String label;
+
+  const Destination({required this.icon, required this.label});
+}
 
 class PullRequest {
   final int id;
