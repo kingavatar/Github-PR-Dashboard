@@ -16,6 +16,7 @@ import 'package:github_pr_dashboard/widgets/navigation_rail.dart';
 import 'package:lottie/lottie.dart';
 
 void main() {
+  Beamer.setPathUrlStrategy();
   runApp(ProviderScope(child: MyApp()));
 }
 
@@ -23,6 +24,7 @@ class MyApp extends ConsumerWidget {
   MyApp({super.key});
 
   final routerDelegate = BeamerDelegate(
+    setBrowserTabTitle: false,
     locationBuilder: RoutesLocationBuilder(
       routes: {
         '/': (context, state, data) {
